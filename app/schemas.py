@@ -15,7 +15,7 @@ class DoctorResponse(DoctorBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Patient Schemas
 class PatientBase(BaseModel):
@@ -29,7 +29,7 @@ class PatientResponse(PatientBase):
     doctor: DoctorResponse
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Case Schemas
 class CaseBase(BaseModel):
@@ -43,7 +43,7 @@ class CaseResponse(CaseBase):
     patient: PatientResponse
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # SyndromeDetection Schemas
 class SyndromeDetectionBase(BaseModel):
@@ -57,7 +57,7 @@ class SyndromeDetectionResponse(SyndromeDetectionBase):
     patient: PatientResponse
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # PatientNote Schemas
 class PatientNoteBase(BaseModel):
@@ -71,7 +71,7 @@ class PatientNoteResponse(PatientNoteBase):
     patient: PatientResponse
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Token Schemas
 class Token(BaseModel):
