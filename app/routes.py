@@ -14,10 +14,10 @@ def register_doctor(doctor: schemas.DoctorCreate, db: Session = Depends(utils.ge
     return crud.create_doctor(db, doctor)
 
 @router.post("/auth/login", response_model=schemas.Token)
-def login_doctor(form_data: auth.OAuth2PasswordRequestForm = Depends(), db: Session = Depends(utils.get_db)):
-    doctor = crud.get_doctor_by_email(db, email=form_data.username)
-    if not doctor or not auth.verify_password(form_data.password, doctor.hashed_password):
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
+def login_doctor(login_data: schemas.LoginRequest, db: Session = Depends(utils.get_db)):
+    doctor = crud.get_doctor_by_email(db, email=login_data.email)
+    if not doctor or not auth.verify_password(login_data.password, doctor.hashed_password):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect email or password")
     access_token = auth.create_access_token(data={"sub": doctor.email})
     return {"access_token": access_token, "token_type": "bearer"}
 

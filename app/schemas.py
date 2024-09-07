@@ -80,3 +80,8 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     email: Optional[str] = None
+
+# Add this model for the login request
+class LoginRequest(BaseModel):
+    email: str
+    password: str
