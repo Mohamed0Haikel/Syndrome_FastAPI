@@ -1,5 +1,3 @@
-# app/crud.py
-
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
@@ -22,6 +20,26 @@ def create_doctor(db: Session, doctor: schemas.DoctorCreate):
         db.commit()
         db.refresh(db_doctor)
         return db_doctor
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Email already registered.")
+
+# NormalUser CRUD Operations
+def get_normal_user_by_email(db: Session, email: str):
+    return db.query(models.NormalUser).filter(models.NormalUser.email == email).first()
+
+def create_normal_user(db: Session, user: schemas.NormalUserCreate):
+    hashed_password = auth.get_password_hash(user.password)
+    db_user = models.NormalUser(
+        name=user.name,
+        email=user.email,
+        hashed_password=hashed_password
+    )
+    try:
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        return db_user
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=400, detail="Email already registered.")

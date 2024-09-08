@@ -62,3 +62,22 @@ def get_current_doctor(db: Session = Depends(get_db), token: str = Depends(oauth
     if doctor is None:
         raise credentials_exception
     return doctor
+
+def get_current_normal_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)) -> models.NormalUser:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+        token_data = schemas.TokenData(email=email)
+    except JWTError:
+        raise credentials_exception
+    normal_user = db.query(models.NormalUser).filter(models.NormalUser.email == token_data.email).first()
+    if normal_user is None:
+        raise credentials_exception
+    return normal_user

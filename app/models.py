@@ -1,9 +1,7 @@
 # app/models.py
 
-
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
-
 from .database import Base
 
 class Doctor(Base):
@@ -15,6 +13,16 @@ class Doctor(Base):
     hashed_password = Column(String, nullable=False)
 
     patients = relationship("Patient", back_populates="doctor", cascade="all, delete")
+
+class NormalUser(Base):
+    __tablename__ = "normal_users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+
+    syndrome_detections = relationship("SyndromeDetection", back_populates="normal_user", cascade="all, delete")
 
 class Patient(Base):
     __tablename__ = "patients"
@@ -43,8 +51,10 @@ class SyndromeDetection(Base):
     id = Column(Integer, primary_key=True, index=True)
     syndrome_name = Column(String, nullable=False)
     patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    normal_user_id = Column(Integer, ForeignKey("normal_users.id"))
 
     patient = relationship("Patient", back_populates="syndrome_detections")
+    normal_user = relationship("NormalUser", back_populates="syndrome_detections")
 
 class PatientNote(Base):
     __tablename__ = "patient_notes"
