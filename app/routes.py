@@ -21,12 +21,12 @@ def login(form_data: schemas.LoginRequest, db: Session = Depends(utils.get_db)):
     doctor = crud.get_doctor_by_email(db, form_data.email)
     if doctor and auth.verify_password(form_data.password, doctor.hashed_password):
         access_token = auth.create_access_token(data={"sub": doctor.email, "user_type": "doctor"})
-        return {"access_token": access_token, "token_type": "bearer", "user_type": "doctor"}
+        return {"doctor_id": doctor.id, "doctor_name": doctor.name , "token_type": "bearer", "user_type": "doctor", "access_token": access_token}
 
     normal_user = crud.get_normal_user_by_email(db, form_data.email)
     if normal_user and auth.verify_password(form_data.password, normal_user.hashed_password):
         access_token = auth.create_access_token(data={"sub": normal_user.email, "user_type": "normal_user"})
-        return {"access_token": access_token, "token_type": "bearer", "user_type": "normal_user"}
+        return {"normal_user_id": normal_user.id, "normal_user_name": normal_user.name, "access_token": access_token, "token_type": "bearer", "user_type": "normal_user"}
 
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials.")
 
