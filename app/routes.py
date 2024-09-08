@@ -8,7 +8,7 @@ from . import schemas, models, crud, auth, utils
 router = APIRouter()
 
 # Authentication Routes
-@router.post("/auth/register", response_model=schemas.DoctorResponse)
+@router.post("/auth/register_doctor", response_model=schemas.DoctorResponse)
 def register_doctor(doctor: schemas.DoctorCreate, db: Session = Depends(utils.get_db)):
     return crud.create_doctor(db, doctor)
 
