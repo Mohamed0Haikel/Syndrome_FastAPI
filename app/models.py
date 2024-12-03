@@ -1,66 +1,59 @@
 # app/models.py
 
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from .database import Base
 
-class Doctor(Base):
-    __tablename__ = "doctors"
-
+class Admin(Base):
+    __tablename__ = "admins"
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True, nullable=False)
+    name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
 
-    patients = relationship("Patient", back_populates="doctor", cascade="all, delete")
+class Doctor(Base):
+    __tablename__ = "doctors"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+
+    cases = relationship("Case", back_populates="doctor", cascade="all, delete")
 
 class NormalUser(Base):
     __tablename__ = "normal_users"
-
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True, nullable=False)
+    name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
+    profile_data = Column(Text, nullable=True)
 
     syndrome_detections = relationship("SyndromeDetection", back_populates="normal_user", cascade="all, delete")
 
-class Patient(Base):
-    __tablename__ = "patients"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True, nullable=False)
-    doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=False)
-
-    doctor = relationship("Doctor", back_populates="patients")
-    cases = relationship("Case", back_populates="patient", cascade="all, delete")
-    syndrome_detections = relationship("SyndromeDetection", back_populates="patient", cascade="all, delete")
-    notes = relationship("PatientNote", back_populates="patient", cascade="all, delete")
-
 class Case(Base):
     __tablename__ = "cases"
-
     id = Column(Integer, primary_key=True, index=True)
     description = Column(String, nullable=False)
-    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=False)
 
-    patient = relationship("Patient", back_populates="cases")
+    doctor = relationship("Doctor", back_populates="cases")
+    syndrome_detections = relationship("SyndromeDetection", back_populates="case", cascade="all, delete")
 
 class SyndromeDetection(Base):
     __tablename__ = "syndrome_detections"
-
     id = Column(Integer, primary_key=True, index=True)
-    syndrome_name = Column(String, nullable=False)
-    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
-    normal_user_id = Column(Integer, ForeignKey("normal_users.id"))
+    result = Column(String, nullable=False)
+    image_url = Column(String, nullable=False)
+    case_id = Column(Integer, ForeignKey("cases.id"), nullable=True)
+    normal_user_id = Column(Integer, ForeignKey("normal_users.id"), nullable=True)
 
-    patient = relationship("Patient", back_populates="syndrome_detections")
+    case = relationship("Case", back_populates="syndrome_detections")
     normal_user = relationship("NormalUser", back_populates="syndrome_detections")
 
-class PatientNote(Base):
-    __tablename__ = "patient_notes"
-
+class Article(Base):
+    __tablename__ = "articles"
     id = Column(Integer, primary_key=True, index=True)
-    note = Column(String, nullable=False)
-    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
-
-    patient = relationship("Patient", back_populates="notes")
+    title = Column(String, nullable=False)
+    author = Column(String, nullable=False)
+    photo_url = Column(String, nullable=False)
+    content = Column(Text, nullable=False)

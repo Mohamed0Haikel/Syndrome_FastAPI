@@ -3,16 +3,31 @@
 from typing import List, Optional
 from pydantic import BaseModel
 
+# Authentication Schemas
 class Token(BaseModel):
     access_token: str
     token_type: str
-
-class TokenWithUserType(Token):
     user_type: str
 
-class TokenData(BaseModel):
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+# Admin Schemas
+class AdminBase(BaseModel):
+    name: str
     email: str
 
+class AdminCreate(AdminBase):
+    password: str
+
+class AdminResponse(AdminBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+# Doctor Schemas
 class DoctorBase(BaseModel):
     name: str
     email: str
@@ -26,6 +41,7 @@ class DoctorResponse(DoctorBase):
     class Config:
         from_attributes = True
 
+# Normal User Schemas
 class NormalUserBase(BaseModel):
     name: str
     email: str
@@ -35,30 +51,15 @@ class NormalUserCreate(NormalUserBase):
 
 class NormalUserResponse(NormalUserBase):
     id: int
+    profile_data: Optional[str]
 
     class Config:
         from_attributes = True
 
-class LoginRequest(BaseModel):
-    email: str
-    password: str
-
-class PatientBase(BaseModel):
-    name: str
-    doctor_id: int
-
-class PatientCreate(PatientBase):
-    pass
-
-class PatientResponse(PatientBase):
-    id: int
-
-    class Config:
-        from_attributes = True
-
+# Case and Detection Schemas
 class CaseBase(BaseModel):
     description: str
-    patient_id: int
+    doctor_id: int
 
 class CaseCreate(CaseBase):
     pass
@@ -70,28 +71,32 @@ class CaseResponse(CaseBase):
         from_attributes = True
 
 class SyndromeDetectionBase(BaseModel):
-    syndrome_name: str
-    patient_id: int
+    result: str
+    image_url: str
 
 class SyndromeDetectionCreate(SyndromeDetectionBase):
-    pass
+    case_id: Optional[int]
+    normal_user_id: Optional[int]
 
 class SyndromeDetectionResponse(SyndromeDetectionBase):
     id: int
-    normal_user_id: Optional[int]
 
     class Config:
         from_attributes = True
 
-class PatientNoteBase(BaseModel):
-    note: str
-    patient_id: int
+# Article Schemas
+class ArticleBase(BaseModel):
+    title: str
+    author: str
+    photo_url: str
+    content: str
 
-class PatientNoteCreate(PatientNoteBase):
+class ArticleCreate(ArticleBase):
     pass
 
-class PatientNoteResponse(PatientNoteBase):
+class ArticleResponse(ArticleBase):
     id: int
 
     class Config:
         from_attributes = True
+
