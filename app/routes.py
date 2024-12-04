@@ -62,6 +62,33 @@ def delete_user(user_id: int, db: Session = db_dependency):
     return {"detail": "User deleted successfully."}
 
 
+# @router.get("/admin/users", response_model=List[schemas.NormalUserResponse])
+# def view_all_normal_users(db: Session = Depends(utils.get_db), current_admin: schemas.AdminResponse = Depends(auth.get_current_user)):
+#     if not isinstance(current_admin, schemas.AdminResponse):
+#         raise HTTPException(
+#             status_code=status.HTTP_403_FORBIDDEN,
+#             detail="Not authorized to view users.",
+#         )
+#     return crud.get_all_normal_users(db)
+@router.get("/admin/users", response_model=List[schemas.NormalUserResponse])
+def view_all_normal_users(db: Session = Depends(utils.get_db)):
+    """Fetch a list of all normal users."""
+    return crud.get_all_normal_users(db)
+
+
+# @router.get("/admin/doctors", response_model=List[schemas.DoctorResponse])
+# def view_all_doctors(db: Session = Depends(utils.get_db), current_admin: schemas.AdminResponse = Depends(auth.get_current_user)):
+#     if not isinstance(current_admin, schemas.AdminResponse):
+#         raise HTTPException(
+#             status_code=status.HTTP_403_FORBIDDEN,
+#             detail="Not authorized to view doctors.",
+#         )
+#     return crud.get_all_doctors(db)
+@router.get("/admin/doctors", response_model=List[schemas.DoctorResponse])
+def view_all_doctors(db: Session = Depends(utils.get_db)):
+    """Fetch a list of all doctors."""
+    return crud.get_all_doctors(db)
+
 # --------------------------------------
 # Doctor Endpoints
 # --------------------------------------
