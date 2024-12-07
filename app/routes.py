@@ -11,6 +11,14 @@ router = APIRouter()
 # Dependency
 db_dependency = Depends(utils.get_db)
 
+# # Dependency to get DB session
+# def get_db():
+#     db = SessionLocal()
+#     try:
+#         yield db
+#     finally:
+#         db.close()
+
 # --------------------------------------
 # Authentication Endpoints
 # --------------------------------------
@@ -56,10 +64,42 @@ def create_article(article: schemas.ArticleCreate, db: Session = db_dependency):
     return crud.create_article(db, article)
 
 
-@router.delete("/admin/users/{user_id}", status_code=204)
-def delete_user(user_id: int, db: Session = db_dependency):
-    crud.delete_user(db, user_id)
-    return {"detail": "User deleted successfully."}
+# @router.delete("/admin/users/{user_id}", status_code=204)
+# def delete_user(user_id: int, db: Session = db_dependency):
+#     crud.delete_user(db, user_id)
+#     return {"detail": "User deleted successfully."}
+
+@router.delete("/admin/delete/{id}/{user_type}", response_model=schemas.GenericResponse)
+def delete_user_or_doctor(id: int, user_type: str, db: Session = Depends(utils.get_db)):
+    """
+    Delete a user or doctor based on the provided id and user_type.
+    `user_type` should be either 'user' or 'doctor'.
+    """
+    if user_type.lower() == "user":
+        user = crud.get_normal_user_by_id(db, id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User with id {id} not found."
+            )
+        crud.delete_normal_user(db, id)
+        return {"message": f"User with id {id} has been deleted successfully."}
+    
+    elif user_type.lower() == "doctor":
+        doctor = crud.get_doctor_by_id(db, id)
+        if not doctor:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Doctor with id {id} not found."
+            )
+        crud.delete_doctor(db, id)
+        return {"message": f"Doctor with id {id} has been deleted successfully."}
+    
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid user_type. It must be either 'user' or 'doctor'."
+        )
 
 
 # @router.get("/admin/users", response_model=List[schemas.NormalUserResponse])

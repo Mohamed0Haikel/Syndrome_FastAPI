@@ -169,3 +169,23 @@ def delete_user(db: Session, user_id: int) -> None:
         db.commit()
         return
     raise HTTPException(status_code=404, detail="User not found.")
+
+
+
+def get_normal_user_by_id(db: Session, user_id: int):
+    return db.query(models.NormalUser).filter(models.NormalUser.id == user_id).first()
+
+def delete_normal_user(db: Session, user_id: int):
+    user = get_normal_user_by_id(db, user_id)
+    if user:
+        db.delete(user)
+        db.commit()
+
+def get_doctor_by_id(db: Session, doctor_id: int):
+    return db.query(models.Doctor).filter(models.Doctor.id == doctor_id).first()
+
+def delete_doctor(db: Session, doctor_id: int):
+    doctor = get_doctor_by_id(db, doctor_id)
+    if doctor:
+        db.delete(doctor)
+        db.commit()
