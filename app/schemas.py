@@ -16,7 +16,7 @@ class Token(BaseModel):
     token_type: str
     user_type: str
     user_id: int
-    
+
 
 
 class LoginRequest(BaseModel):
@@ -50,6 +50,7 @@ class AdminResponse(AdminBase):
 # Doctor Schemas
 class DoctorBase(BaseModel):
     name: str
+    phone: str
     email: str
 
 
@@ -59,6 +60,9 @@ class DoctorCreate(DoctorBase):
 
 class DoctorResponse(DoctorBase):
     id: int
+    name: str
+    phone: str
+    email: str
 
     class Config:
         from_attributes = True

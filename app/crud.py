@@ -44,6 +44,7 @@ def create_doctor(db: Session, doctor: schemas.DoctorCreate) -> models.Doctor:
     hashed_password = get_password_hash(doctor.password)
     db_doctor = models.Doctor(
         name=doctor.name,
+        phone=doctor.phone,
         email=doctor.email,
         hashed_password=hashed_password
     )
