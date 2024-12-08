@@ -174,12 +174,15 @@ def get_articles(db: Session) -> List[models.Article]:
 # Add the delete_article function
 def delete_article(db: Session, article_id: int) -> bool:
     article = db.query(models.Article).filter(models.Article.id == article_id).first()
-    if article is None:
-        raise HTTPException(status_code=404, detail="Article not found.")
-    
-    db.delete(article)
-    db.commit()
-    return True  # Return True if deletion is successful
+    if article:
+        # Optionally delete the file from the filesystem
+        if os.path.exists(article.photo_url):
+            os.remove(article.photo_url)
+        db.delete(article)
+        db.commit()
+        return True
+    raise HTTPException(status_code=404, detail="Article not found.")
+    # return True  # Return True if deletion is successful
 
 # User Deletion
 def delete_user(db: Session, user_id: int) -> None:
