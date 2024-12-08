@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from . import schemas, models, crud, auth, utils
+from app.schemas import GenericResponse
 
 router = APIRouter()
 

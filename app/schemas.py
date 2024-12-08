@@ -4,10 +4,12 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 
+# class GenericResponse(BaseModel):
+#     message: str
 class GenericResponse(BaseModel):
+    success: bool
     message: str
 
-    
 # Authentication Schemas
 class Token(BaseModel):
     access_token: str
