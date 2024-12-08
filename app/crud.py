@@ -8,6 +8,10 @@ from fastapi import HTTPException, status
 from . import models, schemas
 from .auth import get_password_hash
 
+import os
+from fastapi import UploadFile
+from uuid import uuid4
+
 
 # Admin CRUD
 def create_admin(db: Session, admin: schemas.AdminCreate) -> models.Admin:
@@ -40,6 +44,7 @@ def create_doctor(db: Session, doctor: schemas.DoctorCreate) -> models.Doctor:
     hashed_password = get_password_hash(doctor.password)
     db_doctor = models.Doctor(
         name=doctor.name,
+        phone=doctor.phone,
         email=doctor.email,
         hashed_password=hashed_password
     )
@@ -66,6 +71,7 @@ def create_normal_user(db: Session, user: schemas.NormalUserCreate) -> models.No
     hashed_password = get_password_hash(user.password)
     db_user = models.NormalUser(
         name=user.name,
+        phone=user.phone,
         email=user.email,
         hashed_password=hashed_password
     )
@@ -134,11 +140,28 @@ def get_detection_history_for_case(db: Session, case_id: int) -> List[models.Syn
 
 
 # Article CRUD
-def create_article(db: Session, article: schemas.ArticleCreate) -> models.Article:
+def create_article(db: Session, article: schemas.ArticleCreate, photo: UploadFile) -> models.Article:
+    # Save the uploaded file
+    if not photo:
+        raise HTTPException(status_code=400, detail="Image file is required.")
+
+    file_extension = os.path.splitext(photo.filename)[1]
+    if file_extension.lower() not in [".jpg", ".jpeg", ".png"]:
+        raise HTTPException(status_code=400, detail="Invalid image format. Supported formats: .jpg, .jpeg, .png")
+    
+    # Generate a unique filename and save the file
+    unique_filename = f"{uuid4().hex}{file_extension}"
+    file_path = os.path.join("media/articles", unique_filename)
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+    with open(file_path, "wb") as buffer:
+        buffer.write(photo.file.read())
+
+    # Save the article record with the photo URL
     db_article = models.Article(
         title=article.title,
         author=article.author,
-        photo_url=article.photo_url,
+        photo_url=f"/media/articles/{unique_filename}",  # Save the URL to the file
         content=article.content
     )
     db.add(db_article)
@@ -150,6 +173,18 @@ def create_article(db: Session, article: schemas.ArticleCreate) -> models.Articl
 def get_articles(db: Session) -> List[models.Article]:
     return db.query(models.Article).all()
 
+# Add the delete_article function
+def delete_article(db: Session, article_id: int) -> bool:
+    article = db.query(models.Article).filter(models.Article.id == article_id).first()
+    if article:
+        # Optionally delete the file from the filesystem
+        if os.path.exists(article.photo_url):
+            os.remove(article.photo_url)
+        db.delete(article)
+        db.commit()
+        return True
+    raise HTTPException(status_code=404, detail="Article not found.")
+    # return True  # Return True if deletion is successful
 
 # User Deletion
 def delete_user(db: Session, user_id: int) -> None:
@@ -169,3 +204,23 @@ def delete_user(db: Session, user_id: int) -> None:
         db.commit()
         return
     raise HTTPException(status_code=404, detail="User not found.")
+
+
+
+def get_normal_user_by_id(db: Session, user_id: int):
+    return db.query(models.NormalUser).filter(models.NormalUser.id == user_id).first()
+
+def delete_normal_user(db: Session, user_id: int):
+    user = get_normal_user_by_id(db, user_id)
+    if user:
+        db.delete(user)
+        db.commit()
+
+def get_doctor_by_id(db: Session, doctor_id: int):
+    return db.query(models.Doctor).filter(models.Doctor.id == doctor_id).first()
+
+def delete_doctor(db: Session, doctor_id: int):
+    doctor = get_doctor_by_id(db, doctor_id)
+    if doctor:
+        db.delete(doctor)
+        db.commit()

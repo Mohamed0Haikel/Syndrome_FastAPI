@@ -4,12 +4,19 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 
+# class GenericResponse(BaseModel):
+#     message: str
+class GenericResponse(BaseModel):
+    success: bool
+    message: str
+
 # Authentication Schemas
 class Token(BaseModel):
     access_token: str
     token_type: str
     user_type: str
     user_id: int
+
 
 
 class LoginRequest(BaseModel):
@@ -43,6 +50,7 @@ class AdminResponse(AdminBase):
 # Doctor Schemas
 class DoctorBase(BaseModel):
     name: str
+    phone: str
     email: str
 
 
@@ -52,6 +60,9 @@ class DoctorCreate(DoctorBase):
 
 class DoctorResponse(DoctorBase):
     id: int
+    name: str
+    phone: str
+    email: str
 
     class Config:
         from_attributes = True
@@ -60,6 +71,7 @@ class DoctorResponse(DoctorBase):
 # Normal User Schemas
 class NormalUserBase(BaseModel):
     name: str
+    phone: str
     email: str
 
 
@@ -69,7 +81,10 @@ class NormalUserCreate(NormalUserBase):
 
 class NormalUserResponse(NormalUserBase):
     id: int
-    profile_data: Optional[str]
+    name: str
+    phone: str
+    email: str
+    # profile_data: Optional[str]
 
     class Config:
         from_attributes = True
@@ -117,9 +132,14 @@ class ArticleBase(BaseModel):
     content: str
 
 
-class ArticleCreate(ArticleBase):
-    pass
+# class ArticleCreate(ArticleBase):
+#     pass
 
+class ArticleCreate(BaseModel):
+    title: str
+    author: str
+    content: str
+    # Remove `photo_url` from the schema since the image will be handled as a file
 
 class ArticleResponse(ArticleBase):
     id: int
