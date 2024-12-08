@@ -70,6 +70,7 @@ def create_normal_user(db: Session, user: schemas.NormalUserCreate) -> models.No
     hashed_password = get_password_hash(user.password)
     db_user = models.NormalUser(
         name=user.name,
+        phone=user.phone,
         email=user.email,
         hashed_password=hashed_password
     )

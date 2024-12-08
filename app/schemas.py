@@ -16,6 +16,7 @@ class Token(BaseModel):
     token_type: str
     user_type: str
     user_id: int
+    
 
 
 class LoginRequest(BaseModel):
@@ -66,6 +67,7 @@ class DoctorResponse(DoctorBase):
 # Normal User Schemas
 class NormalUserBase(BaseModel):
     name: str
+    phone: str
     email: str
 
 
@@ -75,7 +77,10 @@ class NormalUserCreate(NormalUserBase):
 
 class NormalUserResponse(NormalUserBase):
     id: int
-    profile_data: Optional[str]
+    name: str
+    phone: str
+    email: str
+    # profile_data: Optional[str]
 
     class Config:
         from_attributes = True
