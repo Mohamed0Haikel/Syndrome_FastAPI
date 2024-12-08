@@ -159,7 +159,7 @@ def create_article(db: Session, article: schemas.ArticleCreate, photo: UploadFil
     db_article = models.Article(
         title=article.title,
         author=article.author,
-        photo_url=file_path,  # Save the file path as the photo_url
+        photo_url=f"/media/articles/{unique_filename}",  # Save the URL to the file
         content=article.content
     )
     db.add(db_article)
