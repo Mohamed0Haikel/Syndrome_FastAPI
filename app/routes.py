@@ -1,7 +1,7 @@
 # app/routes.py
 
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from . import schemas, models, crud, auth, utils
@@ -60,10 +60,19 @@ def get_all_articles(db: Session = db_dependency):
     return crud.get_articles(db)
 
 
-@router.post("/admin/articles", response_model=schemas.ArticleResponse)
-def create_article(article: schemas.ArticleCreate, db: Session = db_dependency):
-    return crud.create_article(db, article)
-
+# @router.post("/admin/articles", response_model=schemas.ArticleResponse)
+# def create_article(article: schemas.ArticleCreate, db: Session = db_dependency):
+#     return crud.create_article(db, article)
+@router.post("/admin/articles")
+def post_article(
+    title: str = Form(...),
+    author: str = Form(...),
+    content: str = Form(...),
+    photo: UploadFile = Form(...),
+    db: Session = Depends(utils.get_db)
+):
+    article = schemas.ArticleCreate(title=title, author=author, content=content)
+    return crud.create_article(db, article, photo)
 
 # @router.delete("/admin/users/{user_id}", status_code=204)
 # def delete_user(user_id: int, db: Session = db_dependency):

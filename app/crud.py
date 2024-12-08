@@ -8,6 +8,10 @@ from fastapi import HTTPException, status
 from . import models, schemas
 from .auth import get_password_hash
 
+import os
+from fastapi import UploadFile
+from uuid import uuid4
+
 
 # Admin CRUD
 def create_admin(db: Session, admin: schemas.AdminCreate) -> models.Admin:
@@ -134,11 +138,28 @@ def get_detection_history_for_case(db: Session, case_id: int) -> List[models.Syn
 
 
 # Article CRUD
-def create_article(db: Session, article: schemas.ArticleCreate) -> models.Article:
+def create_article(db: Session, article: schemas.ArticleCreate, photo: UploadFile) -> models.Article:
+    # Save the uploaded file
+    if not photo:
+        raise HTTPException(status_code=400, detail="Image file is required.")
+
+    file_extension = os.path.splitext(photo.filename)[1]
+    if file_extension.lower() not in [".jpg", ".jpeg", ".png"]:
+        raise HTTPException(status_code=400, detail="Invalid image format. Supported formats: .jpg, .jpeg, .png")
+    
+    # Generate a unique filename and save the file
+    unique_filename = f"{uuid4().hex}{file_extension}"
+    file_path = os.path.join("media/articles", unique_filename)
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+    with open(file_path, "wb") as buffer:
+        buffer.write(photo.file.read())
+
+    # Save the article record with the photo URL
     db_article = models.Article(
         title=article.title,
         author=article.author,
-        photo_url=article.photo_url,
+        photo_url=file_path,  # Save the file path as the photo_url
         content=article.content
     )
     db.add(db_article)
