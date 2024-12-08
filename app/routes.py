@@ -74,6 +74,17 @@ def post_article(
     article = schemas.ArticleCreate(title=title, author=author, content=content)
     return crud.create_article(db, article, photo)
 
+@router.delete("/admin/articles/{article_id}", response_model=schemas.GenericResponse)
+def delete_article(article_id: int, db: Session = Depends(utils.get_db)):
+    """
+    Endpoint to delete an article by its ID.
+    """
+    success = crud.delete_article(db, article_id)
+    if success:
+        return {"success": True, "message": "Article deleted successfully."}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to delete the article.")
+
 # @router.delete("/admin/users/{user_id}", status_code=204)
 # def delete_user(user_id: int, db: Session = db_dependency):
 #     crud.delete_user(db, user_id)
@@ -221,13 +232,3 @@ def get_user_profile(user_id: int, db: Session = db_dependency):
     return user
 
 
-# --------------------------------------
-# Additional Admin Functionality (Optional)
-# --------------------------------------
-
-@router.get("/admin/users", response_model=List[schemas.DoctorResponse])
-def get_all_users(db: Session = db_dependency):
-    doctors = crud.get_all_doctors(db)
-    normal_users = crud.get_all_normal_users(db)
-    admins = crud.get_all_admins(db)
-    return {"admins": admins, "doctors": doctors, "normal_users": normal_users}

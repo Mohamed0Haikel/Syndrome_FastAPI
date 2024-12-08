@@ -171,6 +171,15 @@ def create_article(db: Session, article: schemas.ArticleCreate, photo: UploadFil
 def get_articles(db: Session) -> List[models.Article]:
     return db.query(models.Article).all()
 
+# Add the delete_article function
+def delete_article(db: Session, article_id: int) -> bool:
+    article = db.query(models.Article).filter(models.Article.id == article_id).first()
+    if article is None:
+        raise HTTPException(status_code=404, detail="Article not found.")
+    
+    db.delete(article)
+    db.commit()
+    return True  # Return True if deletion is successful
 
 # User Deletion
 def delete_user(db: Session, user_id: int) -> None:
