@@ -171,7 +171,7 @@ def create_article(db: Session, article: schemas.ArticleCreate, photo: UploadFil
 
 
 def get_articles(db: Session) -> List[models.Article]:
-    return db.query(models.Article).all()
+    return db.query(models.Article).order_by(models.Article.id.desc()).all()
 
 # Add the delete_article function
 def delete_article(db: Session, article_id: int) -> bool:
