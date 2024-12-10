@@ -40,12 +40,30 @@ def get_all_admins(db: Session) -> List[models.Admin]:
 
 
 # Doctor CRUD
-def create_doctor(db: Session, doctor: schemas.DoctorCreate) -> models.Doctor:
+def create_doctor(db: Session, doctor: schemas.DoctorCreate, profile_image: UploadFile) -> models.Doctor:
     hashed_password = get_password_hash(doctor.password)
+
+    # Save the uploaded file
+    if not profile_image:
+        raise HTTPException(status_code=400, detail="Image file is required.")
+
+    file_extension = os.path.splitext(profile_image.filename)[1]
+    if file_extension.lower() not in [".jpg", ".jpeg", ".png"]:
+        raise HTTPException(status_code=400, detail="Invalid image format. Supported formats: .jpg, .jpeg, .png")
+    
+    # Generate a unique filename and save the file
+    unique_filename = f"{uuid4().hex}{file_extension}"
+    file_path = os.path.join("media/users", unique_filename)
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+    with open(file_path, "wb") as buffer:
+        buffer.write(profile_image.file.read())
+
     db_doctor = models.Doctor(
         name=doctor.name,
         phone=doctor.phone,
         email=doctor.email,
+        profile_image=f"/media/users/{unique_filename}",  # Save the URL to the
         hashed_password=hashed_password
     )
     try:
@@ -67,12 +85,29 @@ def get_all_doctors(db: Session) -> List[models.Doctor]:
 
 
 # Normal User CRUD
-def create_normal_user(db: Session, user: schemas.NormalUserCreate) -> models.NormalUser:
+def create_normal_user(db: Session, user: schemas.NormalUserCreate, profile_image: UploadFile) -> models.NormalUser:
     hashed_password = get_password_hash(user.password)
+    # Save the uploaded file
+    if not profile_image:
+        raise HTTPException(status_code=400, detail="Image file is required.")
+
+    file_extension = os.path.splitext(profile_image.filename)[1]
+    if file_extension.lower() not in [".jpg", ".jpeg", ".png"]:
+        raise HTTPException(status_code=400, detail="Invalid image format. Supported formats: .jpg, .jpeg, .png")
+    
+    # Generate a unique filename and save the file
+    unique_filename = f"{uuid4().hex}{file_extension}"
+    file_path = os.path.join("media/users", unique_filename)
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+    with open(file_path, "wb") as buffer:
+        buffer.write(profile_image.file.read())
+
     db_user = models.NormalUser(
         name=user.name,
         phone=user.phone,
         email=user.email,
+        profile_image=f"/media/users/{unique_filename}",  # Save the URL to the
         hashed_password=hashed_password
     )
     try:
