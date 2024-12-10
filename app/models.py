@@ -18,6 +18,7 @@ class Doctor(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     phone = Column(String, nullable=True)
     hashed_password = Column(String, nullable=False)
+    profile_image = Column(String, nullable=True)
 
     cases = relationship("Case", back_populates="doctor", cascade="all, delete")
 
@@ -28,6 +29,7 @@ class NormalUser(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     phone = Column(String, nullable=True)
     hashed_password = Column(String, nullable=False)
+    profile_image = Column(String, nullable=True)
     # profile_data = Column(Text, nullable=True)
 
     syndrome_detections = relationship("SyndromeDetection", back_populates="normal_user", cascade="all, delete")

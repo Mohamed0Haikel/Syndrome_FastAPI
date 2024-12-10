@@ -1,7 +1,7 @@
 # app/routes.py
 
 from typing import List, Optional
-from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from . import schemas, models, crud, auth, utils
@@ -33,17 +33,42 @@ def login(login_request: schemas.LoginRequest, db: Session = db_dependency):
     if isinstance(user, models.Admin):
         user_type = "admin"
         user_id = user.id
+        access_token = auth.create_access_token(data={"sub": user.email, "user_type": user_type, "user_id": user_id})
+        return {"access_token": access_token, "token_type": "bearer", "user_type": user_type, "user_id": user_id}
+    
     elif isinstance(user, models.Doctor):
         user_type = "doctor"
         user_id = user.id
+        user_data = {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "phone": user.phone,
+            "profile_image": user.profile_image,
+        }
+
     elif isinstance(user, models.NormalUser):
         user_type = "normal_user"
         user_id = user.id
+        user_data = {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "phone": user.phone,
+            "profile_image": user.profile_image,
+        }
+
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user type.")
 
     access_token = auth.create_access_token(data={"sub": user.email, "user_type": user_type, "user_id": user_id})
-    return {"access_token": access_token, "token_type": "bearer", "user_type": user_type, "user_id": user_id}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user_type": user_type,
+        "user_id": user_id,
+        "user_data": user_data,
+    }
 
 
 # --------------------------------------
@@ -154,10 +179,26 @@ def view_all_doctors(db: Session = Depends(utils.get_db)):
 # Doctor Endpoints
 # --------------------------------------
 
-@router.post("/doctor/register", response_model=schemas.DoctorResponse)
-def register_doctor(doctor: schemas.DoctorCreate, db: Session = db_dependency):
-    return crud.create_doctor(db, doctor)
+# @router.post("/doctor/register", response_model=schemas.DoctorResponse)
+# def register_doctor(doctor: schemas.DoctorCreate, db: Session = db_dependency):
+#     return crud.create_doctor(db, doctor)
 
+@router.post("/doctor/register", response_model=schemas.DoctorResponse)
+def register_doctor(
+    name: str = Form(...),
+    phone: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    profile_image: UploadFile = File(...),
+    db: Session = db_dependency
+):
+    doctor = schemas.DoctorCreate(
+        name=name,
+        phone=phone,
+        email=email,
+        password=password
+    )
+    return crud.create_doctor(db, doctor, profile_image)
 
 @router.post("/doctor/cases", response_model=schemas.CaseResponse)
 def create_case(case: schemas.CaseCreate, db: Session = db_dependency):
@@ -204,9 +245,22 @@ def get_detection_history_for_doctor(doctor_id: int, db: Session = db_dependency
 # --------------------------------------
 
 @router.post("/user/register", response_model=schemas.NormalUserResponse)
-def register_normal_user(user: schemas.NormalUserCreate, db: Session = db_dependency):
-    return crud.create_normal_user(db, user)
-
+def register_normal_user(
+    name: str = Form(...),
+    phone: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    profile_image: UploadFile = File(...),
+    db: Session = db_dependency
+):
+    # Create a NormalUserCreate object
+    user = schemas.NormalUserCreate(
+        name=name,
+        phone=phone,
+        email=email,
+        password=password
+    )
+    return crud.create_normal_user(db, user, profile_image)
 
 @router.post("/user/detections", response_model=schemas.SyndromeDetectionResponse)
 def create_detection_for_user(detection: schemas.SyndromeDetectionCreate, db: Session = db_dependency):
