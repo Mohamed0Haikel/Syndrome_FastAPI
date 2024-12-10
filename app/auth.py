@@ -38,18 +38,24 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
+# def authenticate_user(db: Session, email: str, password: str) -> Optional[Union[models.Admin, models.Doctor, models.NormalUser]]:
+#     user = crud.get_admin_by_email(db, email)
+#     if user and verify_password(password, user.hashed_password):
+#         return user
+#     user = crud.get_doctor_by_email(db, email)
+#     if user and verify_password(password, user.hashed_password):
+#         return user
+#     user = crud.get_normal_user_by_email(db, email)
+#     if user and verify_password(password, user.hashed_password):
+#         return user
+#     return None
 def authenticate_user(db: Session, email: str, password: str) -> Optional[Union[models.Admin, models.Doctor, models.NormalUser]]:
-    user = crud.get_admin_by_email(db, email)
-    if user and verify_password(password, user.hashed_password):
-        return user
-    user = crud.get_doctor_by_email(db, email)
-    if user and verify_password(password, user.hashed_password):
-        return user
-    user = crud.get_normal_user_by_email(db, email)
-    if user and verify_password(password, user.hashed_password):
-        return user
+    user_types = {"admin": crud.get_admin_by_email, "doctor": crud.get_doctor_by_email, "normal_user": crud.get_normal_user_by_email}
+    for user_type, fetch_func in user_types.items():
+        user = fetch_func(db, email)
+        if user and verify_password(password, user.hashed_password):
+            return user
     return None
-
 
 def get_current_user(db: Session = Depends(SessionLocal), token: str = Depends(oauth2_scheme)) -> Union[models.Admin, models.Doctor, models.NormalUser]:
     credentials_exception = HTTPException(

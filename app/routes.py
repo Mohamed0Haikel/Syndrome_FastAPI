@@ -33,17 +33,42 @@ def login(login_request: schemas.LoginRequest, db: Session = db_dependency):
     if isinstance(user, models.Admin):
         user_type = "admin"
         user_id = user.id
+        access_token = auth.create_access_token(data={"sub": user.email, "user_type": user_type, "user_id": user_id})
+        return {"access_token": access_token, "token_type": "bearer", "user_type": user_type, "user_id": user_id}
+    
     elif isinstance(user, models.Doctor):
         user_type = "doctor"
         user_id = user.id
+        user_data = {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "phone": user.phone,
+            "profile_image": user.profile_image,
+        }
+
     elif isinstance(user, models.NormalUser):
         user_type = "normal_user"
         user_id = user.id
+        user_data = {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "phone": user.phone,
+            "profile_image": user.profile_image,
+        }
+
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user type.")
 
     access_token = auth.create_access_token(data={"sub": user.email, "user_type": user_type, "user_id": user_id})
-    return {"access_token": access_token, "token_type": "bearer", "user_type": user_type, "user_id": user_id}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user_type": user_type,
+        "user_id": user_id,
+        "user_data": user_data,
+    }
 
 
 # --------------------------------------

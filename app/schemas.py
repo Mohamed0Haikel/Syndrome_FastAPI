@@ -16,6 +16,7 @@ class Token(BaseModel):
     token_type: str
     user_type: str
     user_id: int
+    user_data: Optional[dict] = None
 
 
 
