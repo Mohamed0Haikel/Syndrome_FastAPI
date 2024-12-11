@@ -137,14 +137,10 @@ class ArticleBase(BaseModel):
     content: str
 
 
-# class ArticleCreate(ArticleBase):
-#     pass
-
 class ArticleCreate(BaseModel):
     title: str
     author: str
     content: str
-    # Remove `photo_url` from the schema since the image will be handled as a file
 
 class ArticleResponse(ArticleBase):
     id: int
