@@ -48,11 +48,19 @@ class SyndromeDetection(Base):
     id = Column(Integer, primary_key=True, index=True)
     result = Column(String, nullable=False)
     image_url = Column(String, nullable=False)
+    date_of_detection = Column(String, nullable=False)
     case_id = Column(Integer, ForeignKey("cases.id"), nullable=True)
     normal_user_id = Column(Integer, ForeignKey("normal_users.id"), nullable=True)
+    # User-specific attributes
+    name = Column(String, nullable=True)
+    age = Column(Integer, nullable=True)
+    gender = Column(String, nullable=True)
+    nationality = Column(String, nullable=True)
+    description = Column(String, nullable=True)
 
     case = relationship("Case", back_populates="syndrome_detections")
     normal_user = relationship("NormalUser", back_populates="syndrome_detections")
+
 
 class Article(Base):
     __tablename__ = "articles"

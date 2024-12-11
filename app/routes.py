@@ -85,9 +85,7 @@ def get_all_articles(db: Session = db_dependency):
     return crud.get_articles(db)
 
 
-# @router.post("/admin/articles", response_model=schemas.ArticleResponse)
-# def create_article(article: schemas.ArticleCreate, db: Session = db_dependency):
-#     return crud.create_article(db, article)
+
 @router.post("/admin/articles")
 def post_article(
     title: str = Form(...),
@@ -110,10 +108,6 @@ def delete_article(article_id: int, db: Session = Depends(utils.get_db)):
     else:
         raise HTTPException(status_code=500, detail="Failed to delete the article.")
 
-# @router.delete("/admin/users/{user_id}", status_code=204)
-# def delete_user(user_id: int, db: Session = db_dependency):
-#     crud.delete_user(db, user_id)
-#     return {"detail": "User deleted successfully."}
 
 @router.delete("/admin/delete/{id}/{user_type}", response_model=schemas.GenericResponse)
 def delete_user_or_doctor(id: int, user_type: str, db: Session = Depends(utils.get_db)):
@@ -148,40 +142,35 @@ def delete_user_or_doctor(id: int, user_type: str, db: Session = Depends(utils.g
         )
 
 
-# @router.get("/admin/users", response_model=List[schemas.NormalUserResponse])
-# def view_all_normal_users(db: Session = Depends(utils.get_db), current_admin: schemas.AdminResponse = Depends(auth.get_current_user)):
-#     if not isinstance(current_admin, schemas.AdminResponse):
-#         raise HTTPException(
-#             status_code=status.HTTP_403_FORBIDDEN,
-#             detail="Not authorized to view users.",
-#         )
-#     return crud.get_all_normal_users(db)
 @router.get("/admin/users", response_model=List[schemas.NormalUserResponse])
 def view_all_normal_users(db: Session = Depends(utils.get_db)):
     """Fetch a list of all normal users."""
     return crud.get_all_normal_users(db)
 
 
-# @router.get("/admin/doctors", response_model=List[schemas.DoctorResponse])
-# def view_all_doctors(db: Session = Depends(utils.get_db), current_admin: schemas.AdminResponse = Depends(auth.get_current_user)):
-#     if not isinstance(current_admin, schemas.AdminResponse):
-#         raise HTTPException(
-#             status_code=status.HTTP_403_FORBIDDEN,
-#             detail="Not authorized to view doctors.",
-#         )
-#     return crud.get_all_doctors(db)
+
 @router.get("/admin/doctors", response_model=List[schemas.DoctorResponse])
 def view_all_doctors(db: Session = Depends(utils.get_db)):
     """Fetch a list of all doctors."""
     return crud.get_all_doctors(db)
 
+
+@router.get("/admin/detections", response_model=List[schemas.SyndromeDetectionResponse])
+def get_all_detections(db: Session = Depends(utils.get_db)):
+    """
+    Get all detections in the database, regardless of whether they belong to a user or a doctor.
+    """
+    detections = db.query(models.SyndromeDetection).all()
+    if not detections:
+        raise HTTPException(status_code=404, detail="No detections found.")
+    return detections
+
+
 # --------------------------------------
 # Doctor Endpoints
 # --------------------------------------
 
-# @router.post("/doctor/register", response_model=schemas.DoctorResponse)
-# def register_doctor(doctor: schemas.DoctorCreate, db: Session = db_dependency):
-#     return crud.create_doctor(db, doctor)
+
 
 @router.post("/doctor/register", response_model=schemas.DoctorResponse)
 def register_doctor(
@@ -200,9 +189,27 @@ def register_doctor(
     )
     return crud.create_doctor(db, doctor, profile_image)
 
-@router.post("/doctor/cases", response_model=schemas.CaseResponse)
-def create_case(case: schemas.CaseCreate, db: Session = db_dependency):
-    return crud.create_case(db, case)
+# POST: Add a case for a specific doctor
+@router.post("/doctor/cases/{doctor_id}", response_model=schemas.CaseResponse)
+def create_case(
+    doctor_id: int,
+    # title: str = Form(...),
+    description: str = Form(...),
+    db: Session = db_dependency
+):
+    # Validate the doctor exists
+    doctor = crud.get_doctor_by_id(db, doctor_id)
+    if not doctor:
+        raise HTTPException(status_code=404, detail="Doctor not found.")
+
+    # Create a new case
+    case_data = schemas.CaseCreate(
+        doctor_id=doctor_id,
+        # title=title,
+        description=description
+    )
+    return crud.create_case(db, case_data)
+
 
 
 @router.get("/doctor/cases/{doctor_id}", response_model=List[schemas.CaseResponse])
@@ -212,31 +219,44 @@ def get_cases_for_doctor(doctor_id: int, db: Session = db_dependency):
         raise HTTPException(status_code=404, detail="No cases found for this doctor.")
     return cases
 
-
 @router.post("/doctor/detections", response_model=schemas.SyndromeDetectionResponse)
-def create_detection_for_case(detection: schemas.SyndromeDetectionCreate, db: Session = db_dependency):
+def post_doctor_detection(
+    detection: schemas.SyndromeDetectionCreate,
+    db: Session = Depends(utils.get_db),
+):
     if not detection.case_id:
-        raise HTTPException(status_code=400, detail="Case ID is required for doctor detections.")
-    return crud.create_detection(db, detection)
+        raise HTTPException(status_code=400, detail="case_id is required for doctor detections.")
+    if detection.normal_user_id:
+        raise HTTPException(status_code=400, detail="normal_user_id should not be provided for doctor detections.")
+    
+    try:
+        new_detection = crud.create_syndrome_detection(db, detection)
+        return new_detection
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/doctor/detections/{case_id}", response_model=List[schemas.SyndromeDetectionResponse])
-def get_detections_for_case(case_id: int, db: Session = db_dependency):
-    detections = crud.get_detections_by_case(db, case_id)
+def get_detections_by_case_id(
+    case_id: int,
+    db: Session = Depends(utils.get_db),
+):
+    detections = db.query(models.SyndromeDetection).filter(models.SyndromeDetection.case_id == case_id).all()
     if not detections:
-        raise HTTPException(status_code=404, detail="No detections found for this case.")
+        raise HTTPException(status_code=404, detail="No detections found for the given case_id.")
     return detections
 
-
 @router.get("/doctor/detection-history/{doctor_id}", response_model=List[schemas.SyndromeDetectionResponse])
-def get_detection_history_for_doctor(doctor_id: int, db: Session = db_dependency):
-    # Assuming detection history for a doctor is all detections across their cases
-    cases = crud.get_cases_by_doctor(db, doctor_id)
-    detections = []
-    for case in cases:
-        detections.extend(crud.get_detections_by_case(db, case.id))
-    if not detections:
-        raise HTTPException(status_code=404, detail="No detection history found for this doctor.")
+def get_detection_history_by_doctor_id(
+    doctor_id: int,
+    db: Session = Depends(utils.get_db),
+):
+    cases = db.query(models.Case).filter(models.Case.doctor_id == doctor_id).all()
+    if not cases:
+        raise HTTPException(status_code=404, detail="No cases found for the given doctor_id.")
+
+    case_ids = [case.id for case in cases]
+    detections = db.query(models.SyndromeDetection).filter(models.SyndromeDetection.case_id.in_(case_ids)).all()
     return detections
 
 
@@ -263,26 +283,32 @@ def register_normal_user(
     return crud.create_normal_user(db, user, profile_image)
 
 @router.post("/user/detections", response_model=schemas.SyndromeDetectionResponse)
-def create_detection_for_user(detection: schemas.SyndromeDetectionCreate, db: Session = db_dependency):
+def post_user_detection(
+    detection: schemas.SyndromeDetectionCreate,
+    db: Session = Depends(utils.get_db),
+):
     if not detection.normal_user_id:
-        raise HTTPException(status_code=400, detail="User ID is required for user detections.")
-    return crud.create_detection(db, detection)
+        raise HTTPException(status_code=400, detail="normal_user_id is required for user detections.")
+    if detection.case_id:
+        raise HTTPException(status_code=400, detail="case_id should not be provided for user detections.")
+    
+    try:
+        new_detection = crud.create_syndrome_detection(db, detection)
+        return new_detection
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/user/detections/{user_id}", response_model=List[schemas.SyndromeDetectionResponse])
-def get_detections_for_user(user_id: int, db: Session = db_dependency):
-    detections = crud.get_detections_by_user(db, user_id)
+def get_detections_by_user_id(
+    user_id: int,
+    db: Session = Depends(utils.get_db),
+):
+    detections = db.query(models.SyndromeDetection).filter(models.SyndromeDetection.normal_user_id == user_id).all()
     if not detections:
-        raise HTTPException(status_code=404, detail="No detections found for this user.")
+        raise HTTPException(status_code=404, detail="No detections found for the given user_id.")
     return detections
 
 
-@router.get("/user/profile/{user_id}", response_model=schemas.NormalUserResponse)
-def get_user_profile(user_id: int, db: Session = db_dependency):
-    user = crud.get_normal_user_by_email(db, email=None)  # You might need a separate function to get by ID
-    user = db.query(models.NormalUser).filter(models.NormalUser.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found.")
-    return user
 
 
