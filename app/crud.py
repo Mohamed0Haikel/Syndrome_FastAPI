@@ -149,18 +149,35 @@ def get_case_by_id(db: Session, case_id: int) -> Optional[models.Case]:
 
 
 # Syndrome Detection CRUD
-def create_detection(db: Session, detection: schemas.SyndromeDetectionCreate) -> models.SyndromeDetection:
-    db_detection = models.SyndromeDetection(
-        result=detection.result,
-        image_url=detection.image_url,
-        case_id=detection.case_id,
-        normal_user_id=detection.normal_user_id
-    )
+def create_syndrome_detection(db: Session, detection: schemas.SyndromeDetectionCreate):
+    # Validate input fields based on user or doctor case
+    if detection.case_id and detection.normal_user_id:
+        raise ValueError("Both case_id and normal_user_id cannot be provided.")
+    if not detection.case_id and not detection.normal_user_id:
+        raise ValueError("Either case_id or normal_user_id must be provided.")
+    
+    # Check required fields for each case type
+    if detection.case_id:
+        # Doctor case
+        if not detection.description:
+            raise ValueError("Description is required for doctor case detections.")
+        # Exclude normal user-specific fields
+        detection_data = detection.dict(exclude={"normal_user_id", "name", "age", "gender", "nationality"})
+    else:
+        # User case
+        required_fields = ["name", "age", "gender", "nationality", "description"]
+        missing_fields = [field for field in required_fields if getattr(detection, field, None) is None]
+        if missing_fields:
+            raise ValueError(f"Missing fields for user detection: {', '.join(missing_fields)}")
+        # Exclude doctor-specific fields
+        detection_data = detection.dict(exclude={"case_id"})
+
+    # Create and save the detection
+    db_detection = models.SyndromeDetection(**detection_data)
     db.add(db_detection)
     db.commit()
     db.refresh(db_detection)
     return db_detection
-
 
 def get_detections_by_case(db: Session, case_id: int) -> List[models.SyndromeDetection]:
     return db.query(models.SyndromeDetection).filter(models.SyndromeDetection.case_id == case_id).all()

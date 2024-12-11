@@ -117,17 +117,50 @@ class SyndromeDetectionBase(BaseModel):
     image_url: str
 
 
-class SyndromeDetectionCreate(SyndromeDetectionBase):
-    case_id: Optional[int]
-    normal_user_id: Optional[int]
+class SyndromeDetectionCreate(BaseModel):
+    result: str
+    image_url: str
+    date_of_detection: str
+    case_id: Optional[int] = None
+    normal_user_id: Optional[int] = None
+    # User-specific attributes
+    name: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    nationality: Optional[str] = None
+    description: Optional[str] = None
+
+    @staticmethod
+    def validate_detection(data: dict):
+        if data.get("case_id") and data.get("normal_user_id"):
+            raise ValueError("Both case_id and normal_user_id cannot be provided.")
+        if not data.get("case_id") and not data.get("normal_user_id"):
+            raise ValueError("Either case_id or normal_user_id must be provided.")
+        if data.get("case_id"):
+            required_fields = ["description"]
+        else:
+            required_fields = ["name", "age", "gender", "nationality", "description"]
+        missing = [field for field in required_fields if not data.get(field)]
+        if missing:
+            raise ValueError(f"Missing fields for detection: {', '.join(missing)}")
 
 
-class SyndromeDetectionResponse(SyndromeDetectionBase):
+class SyndromeDetectionResponse(BaseModel):
     id: int
+    result: str
+    image_url: str
+    date_of_detection: str
+    case_id: Optional[int] = None
+    normal_user_id: Optional[int] = None
+    # User-specific attributes
+    name: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    nationality: Optional[str] = None
+    description: Optional[str] = None
 
     class Config:
         from_attributes = True
-
 
 # Article Schemas
 class ArticleBase(BaseModel):
