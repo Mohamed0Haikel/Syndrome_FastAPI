@@ -164,6 +164,7 @@ class SyndromeDetectionResponse(BaseModel):
 
 # Article Schemas
 class ArticleBase(BaseModel):
+    id: int
     title: str
     author: str
     photo_url: str
