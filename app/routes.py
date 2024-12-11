@@ -199,12 +199,7 @@ def create_case(
     return crud.create_case(db, case_data)
 
 
-# @router.get("/doctor/cases/{doctor_id}", response_model=List[schemas.CaseResponse])
-# def get_cases_for_doctor(doctor_id: int, db: Session = db_dependency):
-#     cases = crud.get_cases_by_doctor(db, doctor_id)
-#     if not cases:
-#         raise HTTPException(status_code=404, detail="No cases found for this doctor.")
-#     return cases
+
 @router.get("/doctor/cases/{doctor_id}", response_model=List[schemas.CaseResponse])
 def get_cases_for_doctor(doctor_id: int, db: Session = db_dependency):
     cases = crud.get_cases_by_doctor(db, doctor_id)
