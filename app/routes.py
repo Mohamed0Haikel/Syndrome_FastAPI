@@ -88,11 +88,11 @@ def get_all_articles(db: Session = db_dependency):
 
 @router.post("/admin/articles")
 def post_article(
+    db: Session = Depends(utils.get_db),
     title: str = Form(...),
     author: str = Form(...),
     content: str = Form(...),
-    photo: UploadFile = Form(...),
-    db: Session = Depends(utils.get_db)
+    photo: UploadFile = Form(...)
 ):
     article = schemas.ArticleCreate(title=title, author=author, content=content)
     return crud.create_article(db, article, photo)
