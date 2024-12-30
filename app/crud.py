@@ -132,7 +132,11 @@ def get_all_normal_users(db: Session) -> List[models.NormalUser]:
 def create_case(db: Session, case: schemas.CaseCreate) -> models.Case:
     db_case = models.Case(
         description=case.description,
-        doctor_id=case.doctor_id
+        doctor_id=case.doctor_id,
+        name=case.name,
+        age=case.age,
+        gender=case.gender,
+        nationality=case.nationality
     )
     db.add(db_case)
     db.commit()

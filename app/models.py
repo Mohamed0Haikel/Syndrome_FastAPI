@@ -37,8 +37,12 @@ class NormalUser(Base):
 class Case(Base):
     __tablename__ = "cases"
     id = Column(Integer, primary_key=True, index=True)
-    description = Column(String, nullable=False)
+    description = Column(String, nullable=True)  # Allow description to be null
     doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=False)
+    name = Column(String, nullable=False)
+    age = Column(Integer, nullable=False)
+    gender = Column(String, nullable=False)
+    nationality = Column(String, nullable=False)
 
     doctor = relationship("Doctor", back_populates="cases")
     syndrome_detections = relationship("SyndromeDetection", back_populates="case", cascade="all, delete")

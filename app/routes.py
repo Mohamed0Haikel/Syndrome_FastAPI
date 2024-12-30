@@ -194,8 +194,11 @@ def register_doctor(
 @router.post("/doctor/cases/{doctor_id}", response_model=schemas.CaseResponse)
 def create_case(
     doctor_id: int,
-    # title: str = Form(...),
-    description: str = Form(...),
+    name: str = Form(...),
+    age: int = Form(...),
+    gender: str = Form(...),
+    nationality: str = Form(...),
+    description: Optional[str] = Form(None),  # Allow description to be null
     db: Session = db_dependency
 ):
     # Validate the doctor exists
@@ -206,8 +209,11 @@ def create_case(
     # Create a new case
     case_data = schemas.CaseCreate(
         doctor_id=doctor_id,
-        # title=title,
-        description=description
+        description=description,
+        name=name,
+        age=age,
+        gender=gender,
+        nationality=nationality
     )
     return crud.create_case(db, case_data)
 
