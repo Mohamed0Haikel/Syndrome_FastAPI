@@ -132,7 +132,11 @@ def get_all_normal_users(db: Session) -> List[models.NormalUser]:
 def create_case(db: Session, case: schemas.CaseCreate) -> models.Case:
     db_case = models.Case(
         description=case.description,
-        doctor_id=case.doctor_id
+        doctor_id=case.doctor_id,
+        name=case.name,
+        age=case.age,
+        gender=case.gender,
+        nationality=case.nationality
     )
     db.add(db_case)
     db.commit()
@@ -149,7 +153,7 @@ def get_case_by_id(db: Session, case_id: int) -> Optional[models.Case]:
 
 
 # Syndrome Detection CRUD
-def create_syndrome_detection(db: Session, detection: schemas.SyndromeDetectionCreate):
+def create_syndrome_detection(db: Session, detection: schemas.SyndromeDetectionCreate, image_file: UploadFile) -> models.SyndromeDetection:
     # Validate input fields based on user or doctor case
     if detection.case_id and detection.normal_user_id:
         raise ValueError("Both case_id and normal_user_id cannot be provided.")
@@ -171,6 +175,25 @@ def create_syndrome_detection(db: Session, detection: schemas.SyndromeDetectionC
             raise ValueError(f"Missing fields for user detection: {', '.join(missing_fields)}")
         # Exclude doctor-specific fields
         detection_data = detection.dict(exclude={"case_id"})
+
+    # Save the uploaded file
+    if not image_file:
+        raise HTTPException(status_code=400, detail="Image file is required.")
+
+    file_extension = os.path.splitext(image_file.filename)[1]
+    if file_extension.lower() not in [".jpg", ".jpeg", ".png"]:
+        raise HTTPException(status_code=400, detail="Invalid image format. Supported formats: .jpg, .jpeg, .png")
+    
+    # Generate a unique filename and save the file
+    unique_filename = f"{uuid4().hex}{file_extension}"
+    file_path = os.path.join("media/detections", unique_filename)
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+    with open(file_path, "wb") as buffer:
+        buffer.write(image_file.file.read())
+
+    # Add the image URL to detection data
+    detection_data["image_url"] = f"/media/detections/{unique_filename}"
 
     # Create and save the detection
     db_detection = models.SyndromeDetection(**detection_data)

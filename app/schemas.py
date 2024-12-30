@@ -102,8 +102,12 @@ class NormalUserResponse(NormalUserBase):
 
 # Case and Detection Schemas
 class CaseBase(BaseModel):
-    description: str
+    description: Optional[str] = None  # Allow description to be null
     doctor_id: int
+    name: str
+    age: int
+    gender: str
+    nationality: str
 
 
 class CaseCreate(CaseBase):
@@ -116,7 +120,6 @@ class CaseResponse(CaseBase):
     class Config:
         from_attributes = True
 
-
 class SyndromeDetectionBase(BaseModel):
     result: str
     image_url: str
@@ -124,7 +127,6 @@ class SyndromeDetectionBase(BaseModel):
 
 class SyndromeDetectionCreate(BaseModel):
     result: str
-    image_url: str
     date_of_detection: str
     case_id: Optional[int] = None
     normal_user_id: Optional[int] = None

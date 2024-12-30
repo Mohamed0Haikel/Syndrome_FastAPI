@@ -109,37 +109,6 @@ def delete_article(article_id: int, db: Session = Depends(utils.get_db)):
         raise HTTPException(status_code=500, detail="Failed to delete the article.")
 
 
-# @router.delete("/admin/delete/{id}/{user_type}", response_model=schemas.GenericResponse)
-# def delete_user_or_doctor(id: int, user_type: str, db: Session = Depends(utils.get_db)):
-#     """
-#     Delete a user or doctor based on the provided id and user_type.
-#     `user_type` should be either 'user' or 'doctor'.
-#     """
-#     if user_type.lower() == "user":
-#         user = crud.get_normal_user_by_id(db, id)
-#         if not user:
-#             raise HTTPException(
-#                 status_code=status.HTTP_404_NOT_FOUND,
-#                 detail=f"User with id {id} not found."
-#             )
-#         crud.delete_normal_user(db, id)
-#         return {"message": f"User with id {id} has been deleted successfully."}
-    
-#     elif user_type.lower() == "doctor":
-#         doctor = crud.get_doctor_by_id(db, id)
-#         if not doctor:
-#             raise HTTPException(
-#                 status_code=status.HTTP_404_NOT_FOUND,
-#                 detail=f"Doctor with id {id} not found."
-#             )
-#         crud.delete_doctor(db, id)
-#         return {"message": f"Doctor with id {id} has been deleted successfully."}
-    
-#     else:
-#         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail="Invalid user_type. It must be either 'user' or 'doctor'."
-#         )
 
 
 @router.delete("/admin/delete/{id}/{user_type}", response_model=schemas.GenericResponse)
@@ -225,8 +194,11 @@ def register_doctor(
 @router.post("/doctor/cases/{doctor_id}", response_model=schemas.CaseResponse)
 def create_case(
     doctor_id: int,
-    # title: str = Form(...),
-    description: str = Form(...),
+    name: str = Form(...),
+    age: int = Form(...),
+    gender: str = Form(...),
+    nationality: str = Form(...),
+    description: Optional[str] = Form(None),  # Allow description to be null
     db: Session = db_dependency
 ):
     # Validate the doctor exists
@@ -237,8 +209,11 @@ def create_case(
     # Create a new case
     case_data = schemas.CaseCreate(
         doctor_id=doctor_id,
-        # title=title,
-        description=description
+        description=description,
+        name=name,
+        age=age,
+        gender=gender,
+        nationality=nationality
     )
     return crud.create_case(db, case_data)
 
@@ -253,19 +228,26 @@ def get_cases_for_doctor(doctor_id: int, db: Session = db_dependency):
 
 @router.post("/doctor/detections", response_model=schemas.SyndromeDetectionResponse)
 def post_doctor_detection(
-    detection: schemas.SyndromeDetectionCreate,
+    result: str = Form(...),
+    date_of_detection: str = Form(...),
+    case_id: int = Form(...),
+    description: str = Form(...),
+    image_file: UploadFile = File(...),
     db: Session = Depends(utils.get_db),
 ):
-    if not detection.case_id:
-        raise HTTPException(status_code=400, detail="case_id is required for doctor detections.")
-    if detection.normal_user_id:
-        raise HTTPException(status_code=400, detail="normal_user_id should not be provided for doctor detections.")
-    
+    detection = schemas.SyndromeDetectionCreate(
+        result=result,
+        date_of_detection=date_of_detection,
+        case_id=case_id,
+        description=description,
+    )
     try:
-        new_detection = crud.create_syndrome_detection(db, detection)
+        new_detection = crud.create_syndrome_detection(db, detection, image_file)
         return new_detection
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
 
 
 @router.get("/doctor/detections/{case_id}", response_model=List[schemas.SyndromeDetectionResponse])
@@ -316,16 +298,29 @@ def register_normal_user(
 
 @router.post("/user/detections", response_model=schemas.SyndromeDetectionResponse)
 def post_user_detection(
-    detection: schemas.SyndromeDetectionCreate,
+    result: str = Form(...),
+    date_of_detection: str = Form(...),
+    normal_user_id: int = Form(...),
+    name: str = Form(...),
+    age: int = Form(...),
+    gender: str = Form(...),
+    nationality: str = Form(...),
+    description: str = Form(...),
+    image_file: UploadFile = File(...),
     db: Session = Depends(utils.get_db),
 ):
-    if not detection.normal_user_id:
-        raise HTTPException(status_code=400, detail="normal_user_id is required for user detections.")
-    if detection.case_id:
-        raise HTTPException(status_code=400, detail="case_id should not be provided for user detections.")
-    
+    detection = schemas.SyndromeDetectionCreate(
+        result=result,
+        date_of_detection=date_of_detection,
+        normal_user_id=normal_user_id,
+        name=name,
+        age=age,
+        gender=gender,
+        nationality=nationality,
+        description=description,
+    )
     try:
-        new_detection = crud.create_syndrome_detection(db, detection)
+        new_detection = crud.create_syndrome_detection(db, detection, image_file)
         return new_detection
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
