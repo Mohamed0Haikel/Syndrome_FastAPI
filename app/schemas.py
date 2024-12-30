@@ -124,7 +124,6 @@ class SyndromeDetectionBase(BaseModel):
 
 class SyndromeDetectionCreate(BaseModel):
     result: str
-    image_url: str
     date_of_detection: str
     case_id: Optional[int] = None
     normal_user_id: Optional[int] = None
