@@ -48,6 +48,11 @@ class AdminResponse(AdminBase):
         from_attributes = True
 
 
+
+class DeleteResponse(BaseModel):
+    success: bool
+    message: str
+
 # Doctor Schemas
 class DoctorBase(BaseModel):
     name: str
