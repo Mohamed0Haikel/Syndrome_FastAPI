@@ -109,37 +109,6 @@ def delete_article(article_id: int, db: Session = Depends(utils.get_db)):
         raise HTTPException(status_code=500, detail="Failed to delete the article.")
 
 
-# @router.delete("/admin/delete/{id}/{user_type}", response_model=schemas.GenericResponse)
-# def delete_user_or_doctor(id: int, user_type: str, db: Session = Depends(utils.get_db)):
-#     """
-#     Delete a user or doctor based on the provided id and user_type.
-#     `user_type` should be either 'user' or 'doctor'.
-#     """
-#     if user_type.lower() == "user":
-#         user = crud.get_normal_user_by_id(db, id)
-#         if not user:
-#             raise HTTPException(
-#                 status_code=status.HTTP_404_NOT_FOUND,
-#                 detail=f"User with id {id} not found."
-#             )
-#         crud.delete_normal_user(db, id)
-#         return {"message": f"User with id {id} has been deleted successfully."}
-    
-#     elif user_type.lower() == "doctor":
-#         doctor = crud.get_doctor_by_id(db, id)
-#         if not doctor:
-#             raise HTTPException(
-#                 status_code=status.HTTP_404_NOT_FOUND,
-#                 detail=f"Doctor with id {id} not found."
-#             )
-#         crud.delete_doctor(db, id)
-#         return {"message": f"Doctor with id {id} has been deleted successfully."}
-    
-#     else:
-#         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail="Invalid user_type. It must be either 'user' or 'doctor'."
-#         )
 
 
 @router.delete("/admin/delete/{id}/{user_type}", response_model=schemas.GenericResponse)
